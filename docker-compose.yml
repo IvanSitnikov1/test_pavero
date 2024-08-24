@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  celery_worker:
+    build:
+      context: .
+    container_name: celery_worker
+    command: celery -A src.tasks.tasks worker --loglevel=INFO
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:5-alpine
+
+  app:
+    build:
+      context: .
+    container_name: fastapi_app
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASS: postgres
+    ports:
+      - 9999:8000
+    depends_on:
+      - db
+      - redis
