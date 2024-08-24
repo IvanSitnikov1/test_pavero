@@ -14,10 +14,13 @@ services:
     build:
       context: .
     container_name: celery_worker
-    command: celery -A src.tasks.tasks worker --loglevel=INFO
+    working_dir: /app/src
+    command: celery -A tasks.tasks worker --loglevel=INFO
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - shared_data:/app/src/Download
     depends_on:
       - redis
 
@@ -36,6 +39,11 @@ services:
       DB_PASS: postgres
     ports:
       - 9999:8000
+    volumes:
+      - shared_data:/app/src/Download
     depends_on:
       - db
       - redis
+
+volumes:
+  shared_data: {}
